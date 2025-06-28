@@ -1,0 +1,24 @@
+{
+  "name": "gmail-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API for Gmail Generator using Node.js, Express, MongoDB",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "gmail",
+    "generator",
+    "backend",
+    "express",
+    "mongodb"
+  ],
+  "author": "Rokun",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.6.1"
+  }
+}
