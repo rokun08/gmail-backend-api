@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gmail Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+    body {
+      background: radial-gradient(circle at top left, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 720px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 24px;
+      padding: 40px 30px;
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    h1 {
+      text-align: center;
+      font-size: 34px;
+      margin-bottom: 25px;
+      font-weight: 700;
+      color: #f0f0f0;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 24px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #eee;
+    }
+    .buttons button {
+      padding: 12px 24px;
+      margin: 10px 8px 20px 0;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(145deg, #00c6ff, #0072ff);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.3s ease, box-shadow 0.3s, scale 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 198, 255, 0.4);
+      position: relative;
+    }
+    .buttons button:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(0, 198, 255, 0.2);
+    }
+    .generated {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 16px;
+      margin: 18px 0;
+      border-radius: 12px;
+      font-size: 18px;
+      text-align: center;
+      border-left: 4px solid #00ffcc;
+      transition: background-color 0.3s ease;
+    }
+    .generated.blink {
+      animation: blink-green 0.6s;
+    }
+    @keyframes blink-green {
+      0%   { background-color: #00ff9966; }
+      50%  { background-color: #00cc7766; }
+      100% { background-color: rgba(255, 255, 255, 0.15); }
+    }
+    .stats {
+      font-size: 15px;
+      text-align: center;
+      margin-bottom: 16px;
+      opacity: 0.85;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 16px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      transition: background 0.3s;
+    }
+    li:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .gmail-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .serial-number {
+      background: #00ffc3;
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .timestamp {
+      font-size: 13px;
+      opacity: 0.7;
+      margin-top: 6px;
+    }
+    .gmail-entry input[type="checkbox"] {
+      transform: scale(1.2);
+    }
+    #copyStatus {
+      text-align: center;
+      font-size: 14px;
+      color: #90ffef;
+      margin-top: -10px;
+      margin-bottom: 15px;
+      display: none;
+    }
+    .delete-btn {
+      display: block;
+      margin: 8px auto 20px;
+      padding: 8px 18px;
+      background: linear-gradient(145deg, #ff4e50, #f00000);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.15s ease, background 0.3s ease, box-shadow 0.3s;
+      box-shadow: 0 3px 12px rgba(255, 0, 0, 0.4);
+    }
+    .delete-btn:hover {
+      background: linear-gradient(145deg, #e93b3b, #cc0000);
+    }
+    .delete-btn:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📧 Gmail Generator</h1>
+    <input type="file" accept=".txt" onchange="importGmail(event)">
+    <div class="buttons">
+      <button onclick="generateGmail()">🎲 Generate</button>
+      <button onclick="copyGmail()">📋 Copy</button>
+    </div>
+    <div id="generatedDisplay" class="generated"></div>
+    <div id="copyStatus">Copied!</div>
+    <div class="stats" id="statsDisplay"></div>
+    <h2 style="margin: 25px 0 10px; text-align:center; font-weight: 600;">📜 History</h2>
+    <button class="delete-btn" onclick="deleteSelected()">🗑️ Delete Selected</button>
+    <ul id="historyList"></ul>
+  </div>
+
+  <script>
+    let gmailList = JSON.parse(localStorage.getItem('gmailList')) || [];
+    let history = JSON.parse(localStorage.getItem('history')) || [];
+    let selected = [];
+
+    function saveData() {
+      localStorage.setItem('gmailList', JSON.stringify(gmailList));
+      localStorage.setItem('history', JSON.stringify(history));
+    }
+
+    function importGmail(e) {
+      const file = e.target.files[0];
+      if (file && file.type === 'text/plain') {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const lines = event.target.result.split('\n').map(l => l.trim()).filter(l => l);
+          lines.forEach(g => {
+            if (!gmailList.includes(g)) gmailList.push(g);
+          });
+          saveData();
+          updateStats();
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function generateGmail() {
+      const unused = gmailList.filter(g => !history.find(h => h.email === g));
+      if (unused.length === 0) {
+        alert("No new Gmail available");
+        return;
+      }
+      const random = unused[Math.floor(Math.random() * unused.length)];
+      const timestamp = new Date().toISOString();
+      const display = document.getElementById('generatedDisplay');
+      display.innerText = `Generated: ${random}`;
+      display.classList.add('blink');
+      setTimeout(() => display.classList.remove('blink'), 700);
+      history.unshift({ email: random, time: timestamp });
+      saveData();
+      renderHistory();
+      updateStats();
+    }
+
+    function copyGmail() {
+      const txt = document.getElementById('generatedDisplay').innerText.replace('Generated: ', '');
+      if (!txt || !gmailList.includes(txt)) return;
+      navigator.clipboard.writeText(txt);
+      const status = document.getElementById('copyStatus');
+      status.style.display = 'block';
+      status.innerText = 'Copied!';
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 1200);
+    }
+
+    function renderHistory() {
+      const ul = document.getElementById('historyList');
+      ul.innerHTML = '';
+      const now = new Date();
+      const total = history.length;
+      history.forEach(({ email, time }, index) => {
+        const li = document.createElement('li');
+
+        const gmailLine = document.createElement('div');
+        gmailLine.className = 'gmail-entry';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.onchange = () => toggleSelect(email);
+        if (selected.includes(email)) checkbox.checked = true;
+
+        const serial = document.createElement('span');
+        serial.className = 'serial-number';
+        serial.style.fontSize = '12px';
+        serial.innerText = `${total - index}`;
+
+        const text = document.createTextNode(email);
+
+        gmailLine.appendChild(checkbox);
+        gmailLine.appendChild(serial);
+        gmailLine.appendChild(text);
+        li.appendChild(gmailLine);
+
+        const diffMin = Math.floor((now - new Date(time)) / 60000);
+        const timeInfo = document.createElement('div');
+        timeInfo.className = 'timestamp';
+        timeInfo.innerText = `${diffMin === 0 ? 'Just now' : diffMin + ' minute(s) ago'}`;
+
+        li.appendChild(timeInfo);
+        ul.appendChild(li);
+      });
+    }
+
+    function toggleSelect(email) {
+      if (selected.includes(email)) {
+        selected = selected.filter(x => x !== email);
+      } else {
+        selected.push(email);
+      }
+    }
+
+    function deleteSelected() {
+      history = history.filter(h => !selected.includes(h.email));
+      selected = [];
+      saveData();
+      renderHistory();
+      updateStats();
+    }
+
+    function updateStats() {
+      const stats = document.getElementById('statsDisplay');
+      stats.innerText = `Total Gmails: ${gmailList.length} | Generated: ${history.length}`;
+    }
+
+    renderHistory();
+    updateStats();
+  </script>
+</body>
+</html>
