@@ -79,6 +79,11 @@ app.post('/api/history/delete', async (req, res) => {
   res.json({ message: 'Deleted from history' });
 });
 
+// ✅ Home Route (for testing Render deployment)
+app.get('/', (req, res) => {
+  res.send("✅ Gmail Generator API is live and working!");
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
